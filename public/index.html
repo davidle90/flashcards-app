@@ -1,0 +1,68 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards App</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .flashcard { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Flashcards App</h1>
+
+    <h2>Create Flashcard</h2>
+    <form id="create-flashcard-form">
+        <label for="question">Question:</label>
+        <input type="text" id="question" required>
+        <label for="answer">Answer:</label>
+        <input type="text" id="answer" required>
+        <button type="submit">Create</button>
+    </form>
+
+    <h2>Flashcards</h2>
+    <div id="flashcards-container"></div>
+
+    <script>
+        async function fetchFlashcards() {
+            const response = await fetch('/flashcards');
+            const flashcards = await response.json();
+            const container = document.getElementById('flashcards-container');
+            container.innerHTML = '';  // Clear previous cards
+            flashcards.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.classList.add('flashcard');
+                cardDiv.innerHTML = `
+                    <strong>Question:</strong> ${card.question}<br>
+                    <strong>Answer:</strong> ${card.answer}<br>
+                    <button onclick="deleteFlashcard(${card.id})">Delete</button>
+                `;
+                container.appendChild(cardDiv);
+            });
+        }
+
+        async function createFlashcard(event) {
+            event.preventDefault();
+            const question = document.getElementById('question').value;
+            const answer = document.getElementById('answer').value;
+            await fetch('/flashcards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question, answer })
+            });
+            document.getElementById('create-flashcard-form').reset();
+            fetchFlashcards();  // Refresh flashcards
+        }
+
+        async function deleteFlashcard(id) {
+            await fetch(`/flashcards/${id}`, { method: 'DELETE' });
+            fetchFlashcards();  // Refresh flashcards
+        }
+
+        document.getElementById('create-flashcard-form').addEventListener('submit', createFlashcard);
+        fetchFlashcards();  // Load flashcards on page load
+    </script>
+</body>
+</html>
